@@ -1,0 +1,86 @@
+org: senthurkumaran
+app: serverless
+service: aws-node-rest-api-project
+
+frameworkVersion: '2'
+
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: '20201221'
+  stage: dev
+  region: us-east-2
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+        - ses:*
+      Resource: '*'
+
+functions:
+  # schedulerTest:
+  #   handler: folder/schedulerTest.handler
+  #   events:
+  #     - schedule:
+  #         rate: rate(1 minute)
+  #         enabled: true
+  mysqlTest:
+    handler: folder/mysqlTest.handler
+    events:
+      - schedule:
+          rate: rate(1 minute)
+          enabled: true
+      - http:
+          path: /file
+          method: get
+  addData:
+    handler: dynamodb/addData.handler
+    events:
+      - http:
+          path: /data
+          method: post
+  fetchDatas:
+    handler: dynamodb/fetchDatas.handler
+    events:
+      - http:
+          path: /datas
+          method: get
+  fetchData:
+    handler: dynamodb/fetchData.handler
+    events:
+      - http:
+          path: /data/{id}
+          method: get
+  updateData:
+    handler: dynamodb/updateData.handler
+    events:
+      - http:
+          path: /data/{id}
+          method: put
+  sendEmail:
+    handler: folder/sendEmail.handler
+    events:
+      - http:
+          path: /send-email
+          method: post
+          cors: true
+
+plugins:
+  - serverless-offline
+  - serverless-offline-scheduler
+
+resources:
+  Resources:
+    SchedulerTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: SchedulerTable
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+
